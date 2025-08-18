@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Policy Management System</title>
     
-    <!-- Modern Fonts (Apple-like) -->
+    <!-- Modern Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <style>
         :root {
-            /* Apple-inspired Color Palette */
             --primary-blue: #007AFF;
             --primary-blue-hover: #0056CC;
             --background-primary: #FFFFFF;
@@ -46,10 +43,9 @@
             background: var(--background-secondary);
             color: var(--text-primary);
             line-height: 1.6;
-            overflow-x: hidden;
         }
 
-        /* Login Page Styles */
+        /* Login Page */
         .login-container {
             min-height: 100vh;
             display: flex;
@@ -68,21 +64,19 @@
             border: 1px solid var(--border-color);
         }
 
-        .login-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
         .login-title {
             font-size: 28px;
             font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 8px;
+            text-align: center;
         }
 
         .login-subtitle {
             font-size: 16px;
             color: var(--text-secondary);
+            margin-bottom: 32px;
+            text-align: center;
         }
 
         .form-group {
@@ -150,9 +144,9 @@
             background: var(--border-color);
         }
 
-        /* Main App Layout */
+        /* Main App */
         .app-container {
-            display: none; /* Hidden until login */
+            display: none;
             min-height: 100vh;
         }
 
@@ -204,15 +198,11 @@
             font-size: 14px;
         }
 
-        /* Dashboard Content */
+        /* Dashboard */
         .dashboard-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 32px 24px;
-        }
-
-        .dashboard-header {
-            margin-bottom: 32px;
         }
 
         .dashboard-title {
@@ -225,9 +215,10 @@
         .dashboard-subtitle {
             font-size: 16px;
             color: var(--text-secondary);
+            margin-bottom: 32px;
         }
 
-        /* Controls Section */
+        /* Controls */
         .controls-section {
             background: var(--background-primary);
             padding: 24px;
@@ -281,7 +272,7 @@
             white-space: nowrap;
         }
 
-        /* Endorsements List */
+        /* Endorsements */
         .endorsements-section {
             background: var(--background-primary);
             border-radius: var(--radius-md);
@@ -327,10 +318,6 @@
 
         .endorsement-item:hover {
             background: var(--background-secondary);
-        }
-
-        .endorsement-item:last-child {
-            border-bottom: none;
         }
 
         .endorsement-main {
@@ -380,7 +367,7 @@
             color: var(--warning-orange);
         }
 
-        /* Loading and Empty States */
+        /* States */
         .loading-state {
             display: flex;
             align-items: center;
@@ -405,7 +392,7 @@
             color: var(--text-tertiary);
         }
 
-        /* Error Messages */
+        /* Messages */
         .error-message {
             background: rgba(255, 59, 48, 0.1);
             color: var(--error-red);
@@ -416,7 +403,6 @@
             display: none;
         }
 
-        /* Success Messages */
         .success-message {
             background: rgba(40, 205, 65, 0.1);
             color: var(--success-green);
@@ -427,7 +413,11 @@
             display: none;
         }
 
-        /* Mobile Responsiveness */
+        #fileInput {
+            display: none;
+        }
+
+        /* Mobile */
         @media (max-width: 768px) {
             .controls-grid {
                 grid-template-columns: 1fr;
@@ -437,10 +427,6 @@
             .endorsement-item {
                 grid-template-columns: 1fr auto;
                 gap: 12px;
-            }
-
-            .endorsement-details {
-                display: none;
             }
 
             .dashboard-container {
@@ -453,48 +439,116 @@
             }
         }
 
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .fade-in {
-            animation: fadeIn 0.3s ease;
-        }
-
-        /* Custom Scrollbar */
-        .endorsements-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .endorsements-list::-webkit-scrollbar-track {
-            background: var(--background-secondary);
-        }
-
-        .endorsements-list::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
-        }
-
-        .endorsements-list::-webkit-scrollbar-thumb:hover {
-            background: var(--border-hover);
-        }
-
-        /* Hide file input */
-        #fileInput {
+        /* Simple Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
             display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-container {
+            background: var(--background-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-heavy);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-content {
+            padding: 24px;
+        }
+
+        .field-group {
+            margin-bottom: 16px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .field-input, .field-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            background: var(--background-primary);
+            color: var(--text-primary);
+        }
+
+        .field-input:focus, .field-select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-danger {
+            background: var(--error-red);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #D70015;
         }
     </style>
 </head>
 <body>
     <!-- Login Screen -->
     <div id="loginScreen" class="login-container">
-        <div class="login-card fade-in">
-            <div class="login-header">
-                <h1 class="login-title">Policy Management</h1>
-                <p class="login-subtitle">Sign in to access your dashboard</p>
-            </div>
+        <div class="login-card">
+            <h1 class="login-title">Policy Management</h1>
+            <p class="login-subtitle">Sign in to access your dashboard</p>
             
             <div id="loginError" class="error-message"></div>
             
@@ -549,7 +603,7 @@
                 <p class="dashboard-subtitle">Manage and review policy endorsements</p>
             </div>
 
-            <!-- Controls Section -->
+            <!-- Controls -->
             <div class="controls-section">
                 <div class="controls-grid">
                     <div class="search-container">
@@ -607,13 +661,11 @@
                 </div>
                 
                 <div class="endorsements-list" id="endorsementsList">
-                    <!-- Loading State -->
                     <div id="loadingState" class="loading-state">
                         <i class="fas fa-spinner fa-spin"></i>
                         <span style="margin-left: 12px;">Loading endorsements...</span>
                     </div>
                     
-                    <!-- Empty State -->
                     <div id="emptyState" class="empty-state" style="display: none;">
                         <i class="fas fa-file-alt"></i>
                         <h3>No endorsements found</h3>
@@ -624,11 +676,72 @@
         </main>
     </div>
 
+    <!-- Simple Modal -->
+    <div id="endorsementModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 class="modal-title">Endorsement Details</h2>
+                <button id="closeModal" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-content">
+                <div id="modalLoading" class="loading-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading...</span>
+                </div>
+                
+                <div id="modalContent" style="display: none;">
+                    <div class="field-group">
+                        <label class="field-label">Policy Number</label>
+                        <input type="text" id="modal_policy_number" class="field-input">
+                    </div>
+                    
+                    <div class="field-group">
+                        <label class="field-label">Endorsement Type</label>
+                        <input type="text" id="modal_endorsement_type" class="field-input">
+                    </div>
+                    
+                    <div class="field-group">
+                        <label class="field-label">Version</label>
+                        <input type="text" id="modal_endorsement_version" class="field-input">
+                    </div>
+                    
+                    <div class="field-group">
+                        <label class="field-label">Status</label>
+                        <select id="modal_status" class="field-select">
+                            <option value="In Review">In Review</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div class="field-group">
+                        <label class="field-label">Concepto ID</label>
+                        <input type="text" id="modal_concepto_id" class="field-input">
+                    </div>
+                    
+                    <div class="field-group">
+                        <label class="field-label">Validity</label>
+                        <input type="text" id="modal_endorsement_validity" class="field-input">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button id="deleteBtn" class="btn btn-danger">Delete</button>
+                <button id="saveBtn" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Application State
         let currentUser = null;
         let endorsements = [];
         let allEndorsementTypes = [];
+        let currentEndorsementId = null;
 
         // DOM Elements
         const loginScreen = document.getElementById('loginScreen');
@@ -650,6 +763,14 @@
         const successMessage = document.getElementById('successMessage');
         const errorMessage = document.getElementById('errorMessage');
 
+        // Modal elements
+        const modal = document.getElementById('endorsementModal');
+        const modalLoading = document.getElementById('modalLoading');
+        const modalContent = document.getElementById('modalContent');
+        const closeModal = document.getElementById('closeModal');
+        const saveBtn = document.getElementById('saveBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+
         // API Functions
         async function apiCall(url, options = {}) {
             try {
@@ -664,7 +785,7 @@
 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.message || 'Request failed');
+                    throw new Error(error.detail || error.message || 'Request failed');
                 }
 
                 return await response.json();
@@ -682,7 +803,6 @@
             });
 
             if (result.success) {
-                // Set session cookie
                 document.cookie = `session_token=${result.session_token}; path=/; max-age=86400`;
                 currentUser = result.user;
                 showApp();
@@ -698,7 +818,6 @@
                 console.error('Logout error:', error);
             }
             
-            // Clear session
             document.cookie = 'session_token=; path=/; max-age=0';
             currentUser = null;
             showLogin();
@@ -840,6 +959,96 @@
             });
         }
 
+        // Modal Functions
+        async function viewEndorsement(id) {
+            currentEndorsementId = id;
+            modal.style.display = 'flex';
+            modalLoading.style.display = 'flex';
+            modalContent.style.display = 'none';
+
+            try {
+                const result = await apiCall(`/api/endorsements/${id}`);
+                if (result.success) {
+                    populateModal(result.data);
+                    modalLoading.style.display = 'none';
+                    modalContent.style.display = 'block';
+                } else {
+                    throw new Error(result.message || 'Failed to load endorsement');
+                }
+            } catch (error) {
+                showMessage('Failed to load endorsement: ' + error.message, true);
+                closeModalFunction();
+            }
+        }
+
+        function populateModal(endorsement) {
+            document.getElementById('modal_policy_number').value = endorsement.policy_number || '';
+            document.getElementById('modal_endorsement_type').value = endorsement.endorsement_type || '';
+            document.getElementById('modal_endorsement_version').value = endorsement.endorsement_version || '';
+            document.getElementById('modal_status').value = endorsement.status || 'In Review';
+            document.getElementById('modal_concepto_id').value = endorsement.concepto_id || '';
+            document.getElementById('modal_endorsement_validity').value = endorsement.endorsement_validity || '';
+        }
+
+        function closeModalFunction() {
+            modal.style.display = 'none';
+            currentEndorsementId = null;
+        }
+
+        async function saveEndorsement() {
+            if (!currentEndorsementId) return;
+
+            try {
+                const updatedData = {
+                    policy_number: document.getElementById('modal_policy_number').value,
+                    endorsement_type: document.getElementById('modal_endorsement_type').value,
+                    endorsement_version: document.getElementById('modal_endorsement_version').value,
+                    status: document.getElementById('modal_status').value,
+                    concepto_id: document.getElementById('modal_concepto_id').value,
+                    endorsement_validity: document.getElementById('modal_endorsement_validity').value
+                };
+
+                const result = await apiCall(`/api/endorsements/${currentEndorsementId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(updatedData)
+                });
+
+                if (result.success) {
+                    showMessage('Endorsement updated successfully');
+                    closeModalFunction();
+                    loadEndorsements();
+                } else {
+                    throw new Error(result.message || 'Save failed');
+                }
+            } catch (error) {
+                showMessage('Failed to save endorsement: ' + error.message, true);
+            }
+        }
+
+        async function deleteEndorsement() {
+            if (!currentEndorsementId) return;
+
+            if (!confirm('Are you sure you want to delete this endorsement? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const result = await apiCall(`/api/endorsements/${currentEndorsementId}`, {
+                    method: 'DELETE'
+                });
+
+                if (result.success) {
+                    showMessage('Endorsement deleted successfully');
+                    closeModalFunction();
+                    loadEndorsements();
+                } else {
+                    throw new Error(result.message || 'Delete failed');
+                }
+            } catch (error) {
+                showMessage('Failed to delete endorsement: ' + error.message, true);
+            }
+        }
+
         // File Upload
         async function uploadFile(file) {
             try {
@@ -871,11 +1080,6 @@
             }
         }
 
-        // View Endorsement (placeholder for next step)
-        function viewEndorsement(id) {
-            showMessage(`View endorsement ${id} - Detail view coming in next step!`);
-        }
-
         // Initialize Dashboard
         async function initDashboard() {
             await Promise.all([
@@ -902,7 +1106,7 @@
 
         logoutBtn.addEventListener('click', logout);
 
-        // Filter and search event listeners
+        // Filter and search
         searchInput.addEventListener('input', debounce(loadEndorsements, 300));
         statusFilter.addEventListener('change', loadEndorsements);
         typeFilter.addEventListener('change', loadEndorsements);
@@ -914,7 +1118,26 @@
             const file = e.target.files[0];
             if (file) {
                 uploadFile(file);
-                fileInput.value = ''; // Reset input
+                fileInput.value = '';
+            }
+        });
+
+        // Modal events
+        closeModal.addEventListener('click', closeModalFunction);
+        saveBtn.addEventListener('click', saveEndorsement);
+        deleteBtn.addEventListener('click', deleteEndorsement);
+
+        // Close modal on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModalFunction();
+            }
+        });
+
+        // ESC key to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                closeModalFunction();
             }
         });
 
@@ -941,21 +1164,6 @@
                 }
             } catch (error) {
                 showLogin();
-            }
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            // Ctrl/Cmd + K for quick search
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                searchInput.focus();
-            }
-            
-            // Escape to clear search
-            if (e.key === 'Escape' && searchInput === document.activeElement) {
-                searchInput.value = '';
-                loadEndorsements();
             }
         });
     </script>
