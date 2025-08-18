@@ -1,4 +1,4 @@
-# file_processor.py - Enhanced with Config-Driven Architecture (Backward Compatible)
+# file_processor.py - Enhanced File Processor with Multi-Combination Support
 import os
 import json
 import pandas as pd
@@ -7,75 +7,47 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 import logging
+import re
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Set up detailed logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class FileProcessor:
-    """Enhanced file processor with config-driven field extraction"""
+    """Enhanced file processor with multi-combination support and comprehensive debugging"""
     
-    def __init__(self, upload_dir: str = "uploads", config_path: str = "config/field_mappings.json"):
+    def __init__(self, upload_dir: str = "uploads"):
         self.upload_dir = Path(upload_dir)
         self.upload_dir.mkdir(exist_ok=True)
-        self.config_path = config_path
-        
-        # Load configuration (with fallback to original behavior)
-        self.config = self.load_config()
         
         # Supported file extensions
         self.supported_extensions = {'.xlsx', '.xls', '.json'}
         
-        # Original field mappings (for backward compatibility)
-        self.legacy_field_mappings = {
+        # Enhanced Spanish field mappings (case-insensitive)
+        self.core_field_mappings = {
+            # Policy number variations
             'número de póliza': 'policy_number',
             'numero de poliza': 'policy_number',
+            'numero de póliza': 'policy_number',
+            'número de poliza': 'policy_number',
             'policy_number': 'policy_number',
             'poliza': 'policy_number',
+            'póliza': 'policy_number',
+            
+            # Endorsement type variations
+            'nombre del endoso': 'endorsement_type',
             'tipo de endoso': 'endorsement_type',
             'endorsement_type': 'endorsement_type',
             'endoso': 'endorsement_type',
+            
+            # Version variations
+            'versión del endoso inicial': 'endorsement_version',
+            'version del endoso inicial': 'endorsement_version',
             'versión del endoso': 'endorsement_version',
             'version del endoso': 'endorsement_version',
             'endorsement_version': 'endorsement_version',
             'version': 'endorsement_version',
-            'concepto id': 'concepto_id',
-            'concepto_id': 'concepto_id',
-            'id': 'concepto_id',
-        }
-    
-    def load_config(self) -> Dict:
-        """Load configuration with fallback to defaults"""
-        try:
-            if Path(self.config_path).exists():
-                with open(self.config_path, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
-                logger.info(" Loaded enhanced configuration")
-                return config
-            else:
-                logger.info("⚠ Config file not found, using legacy mode")
-                return self.get_default_config()
-        except Exception as e:
-            logger.error(f" Error loading config: {e}, using legacy mode")
-            return self.get_default_config()
-    
-    def get_default_config(self) -> Dict:
-        """Default configuration for backward compatibility"""
-        return {
-            "field_mappings": {"spanish_to_english": self.legacy_field_mappings},
-            "core_fields": {
-                "policy_number": {"label": "Policy Number", "type": "text", "group": "core"},
-                "endorsement_type": {"label": "Endorsement Type", "type": "text", "group": "core"},
-                "endorsement_version": {"label": "Version", "type": "text", "group": "core"},
-                "concepto_id": {"label": "Concepto ID", "type": "text", "group": "core"},
-                "status": {"label": "Status", "type": "select", "group": "core"}
-            },
-            "ui_groups": {
-                "core": {"label": "Core Information", "icon": "fas fa-info-circle", "order": 1},
-                "other": {"label": "Additional Fields", "icon": "fas fa-plus-circle", "order": 2}
-            },
-            "validation_rules": {},
-            "excel_processing": {"auto_detect_structure": True}
+            'versión': 'endorsement_version'
         }
     
     def save_uploaded_file(self, file_content: bytes, filename: str) -> str:
@@ -87,10 +59,10 @@ class FileProcessor:
         try:
             with open(file_path, 'wb') as f:
                 f.write(file_content)
-            logger.info(f" File saved: {file_path}")
+            logger.info(f"✅ File saved: {file_path}")
             return str(file_path)
         except Exception as e:
-            logger.error(f" Error saving file: {e}")
+            logger.error(f"❌ Error saving file: {e}")
             raise Exception(f"Failed to save file: {str(e)}")
     
     def validate_file(self, filename: str, file_size: int) -> Tuple[bool, str]:
@@ -106,133 +78,329 @@ class FileProcessor:
         
         return True, "File is valid"
     
-    def normalize_field_name(self, field_name: str) -> str:
-        """Enhanced field name normalization using configuration"""
-        if not field_name:
-            return ""
+    def detect_excel_structure(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Enhanced Excel structure detection with detailed debugging"""
+        logger.info("🔍 Starting Excel structure detection...")
         
-        # Convert to lowercase and strip whitespace
-        normalized = field_name.lower().strip()
+        structure_info = {
+            'type': 'unknown',
+            'campo_column': None,
+            'data_start_column': None,
+            'combination_columns': [],
+            'combination_count': 0,
+            'debug_info': {}
+        }
         
-        # Get mappings from config
-        mappings = self.config.get("field_mappings", {}).get("spanish_to_english", {})
-        
-        # Check for exact match first
-        if normalized in mappings:
-            return mappings[normalized]
-        
-        # Check for partial matches (enhanced)
-        for spanish_key, english_key in mappings.items():
-            if spanish_key in normalized or normalized in spanish_key:
-                return english_key
-        
-        # Return cleaned field name if no mapping found
-        cleaned = normalized.replace(' ', '_').replace('ñ', 'n').replace('ó', 'o').replace('í', 'i').replace('é', 'e').replace('á', 'a')
-        return cleaned
-    
-    def get_field_definition(self, field_name: str) -> Dict:
-        """Get field definition from config"""
-        core_fields = self.config.get("core_fields", {})
-        dynamic_fields = self.config.get("dynamic_field_types", {})
-        
-        if field_name in core_fields:
-            return core_fields[field_name]
-        elif field_name in dynamic_fields:
-            return dynamic_fields[field_name]
-        else:
-            # Return default field definition
-            return {
-                "label": field_name.replace('_', ' ').title(),
-                "type": "text",
-                "validation": "string",
-                "group": "other"
-            }
-    
-    def extract_core_fields(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Enhanced core field extraction"""
-        core_fields = {}
-        core_field_names = self.config.get("core_fields", {}).keys()
-        
-        for original_key, value in data.items():
-            normalized_key = self.normalize_field_name(original_key)
+        try:
+            logger.info(f"📊 DataFrame shape: {df.shape}")
+            logger.info(f"📊 DataFrame columns: {list(df.columns)}")
             
-            if normalized_key in core_field_names:
-                # Clean the value
-                if isinstance(value, str):
-                    core_fields[normalized_key] = value.strip() if value else None
+            # Debug: Show first few rows of all columns
+            logger.info("📋 First 5 rows sample:")
+            for i in range(min(5, len(df))):
+                row_data = []
+                for j in range(min(6, len(df.columns))):  # Show first 6 columns
+                    value = df.iloc[i, j]
+                    col_name = df.columns[j] if j < len(df.columns) else f"Col_{j}"
+                    row_data.append(f"{col_name}='{value}'")
+                logger.info(f"   Row {i}: {', '.join(row_data)}")
+            
+            # Look for "Campo" in column B (index 1)
+            if len(df.columns) > 1:
+                logger.info("🔍 Checking Column B for 'Campo' indicators...")
+                col_b_values = df.iloc[:, 1].astype(str).str.lower()
+                logger.info(f"   Column B values (first 10): {list(col_b_values.head(10))}")
+                
+                # Check for "campo" or field name patterns
+                campo_indicators = ['campo', 'field', 'parameter']
+                spanish_field_patterns = ['número', 'nombre', 'versión', 'ramo', 'año']
+                
+                has_campo = False
+                
+                # Check for explicit campo indicators
+                for indicator in campo_indicators:
+                    if any(indicator in val for val in col_b_values.head(10)):
+                        has_campo = True
+                        logger.info(f"✅ Found '{indicator}' indicator in Column B")
+                        break
+                
+                # Check for Spanish field patterns if no explicit campo found
+                if not has_campo:
+                    logger.info("🔍 Looking for Spanish field patterns...")
+                    spanish_field_count = 0
+                    for pattern in spanish_field_patterns:
+                        if any(pattern in val for val in col_b_values.head(15)):
+                            spanish_field_count += 1
+                            logger.info(f"   Found Spanish field pattern: '{pattern}'")
+                    
+                    if spanish_field_count >= 2:  # At least 2 Spanish patterns
+                        has_campo = True
+                        logger.info(f"✅ Detected Spanish field structure (found {spanish_field_count} patterns)")
+                
+                if has_campo:
+                    structure_info['campo_column'] = 1
+                    structure_info['type'] = 'campo_combinations'
+                    
+                    # Find data columns starting from column C (index 2) or D (index 3)
+                    logger.info("🔍 Checking for combination columns starting from column C...")
+                    
+                    for col_idx in range(2, len(df.columns)):  # Start from column C
+                        col_header = str(df.columns[col_idx]).strip()
+                        col_data = df.iloc[:, col_idx].dropna()
+                        
+                        # Check if column has meaningful data
+                        non_empty_data = [str(val).strip() for val in col_data if str(val).strip() and str(val) != 'nan']
+                        
+                        logger.info(f"   Column {col_idx} ({col_header}): {len(non_empty_data)} meaningful values")
+                        
+                        if len(non_empty_data) >= 3:  # Has sufficient meaningful data
+                            structure_info['combination_columns'].append(col_idx)
+                            logger.info(f"   ✅ Added Column {col_idx} as combination column")
+                            # Show sample data
+                            sample_data = non_empty_data[:3]
+                            logger.info(f"      Sample data: {sample_data}")
+                    
+                    structure_info['combination_count'] = len(structure_info['combination_columns'])
+                    structure_info['data_start_column'] = structure_info['combination_columns'][0] if structure_info['combination_columns'] else None
+                    
+                    logger.info(f"📋 Campo/Combination structure detected:")
+                    logger.info(f"   - Campo column: {structure_info['campo_column']}")
+                    logger.info(f"   - Combination columns: {structure_info['combination_columns']}")
+                    logger.info(f"   - Total combinations: {structure_info['combination_count']}")
+                    
+                    return structure_info
                 else:
-                    core_fields[normalized_key] = str(value) if value is not None else None
+                    logger.warning("⚠️ No Campo structure detected in Column B")
+            
+            # Fallback to record-based processing
+            structure_info['type'] = 'record_based'
+            logger.info("📊 Falling back to record-based structure")
+            
+        except Exception as e:
+            logger.error(f"❌ Error detecting structure: {e}")
+            import traceback
+            traceback.print_exc()
+            structure_info['type'] = 'unknown'
+            structure_info['debug_info']['error'] = str(e)
+        
+        return structure_info
+    
+    def extract_core_fields_from_combination(self, combination_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced core fields extraction with fuzzy matching"""
+        logger.info("🔍 Extracting core fields from combination...")
+        logger.info(f"📝 Input data has {len(combination_data)} fields")
+        
+        # Debug: Show all available fields
+        logger.info("📋 Available fields:")
+        for field_name, field_value in list(combination_data.items())[:10]:  # Show first 10
+            logger.info(f"   '{field_name}' = '{field_value}'")
+        
+        core_fields = {}
+        
+        # Enhanced field matching with fuzzy logic
+        for spanish_field, english_field in self.core_field_mappings.items():
+            logger.debug(f"🔍 Looking for '{spanish_field}' -> '{english_field}'")
+            
+            # Try exact match first (case-insensitive)
+            for field_name, field_value in combination_data.items():
+                if spanish_field.lower() == field_name.lower().strip():
+                    logger.info(f"✅ Exact match found: '{field_name}' = '{field_value}'")
+                    core_fields[english_field] = self.process_field_value(field_value, english_field)
+                    break
+            
+            # If no exact match, try partial matching
+            if english_field not in core_fields:
+                for field_name, field_value in combination_data.items():
+                    field_name_clean = field_name.lower().strip()
+                    
+                    # Check if key words match
+                    if english_field == 'policy_number':
+                        if any(word in field_name_clean for word in ['póliza', 'poliza', 'policy']):
+                            logger.info(f"✅ Partial match for policy: '{field_name}' = '{field_value}'")
+                            core_fields[english_field] = self.process_field_value(field_value, english_field)
+                            break
+                    elif english_field == 'endorsement_type':
+                        if any(word in field_name_clean for word in ['endoso', 'endorsement', 'nombre']):
+                            logger.info(f"✅ Partial match for endorsement: '{field_name}' = '{field_value}'")
+                            core_fields[english_field] = self.process_field_value(field_value, english_field)
+                            break
+                    elif english_field == 'endorsement_version':
+                        if any(word in field_name_clean for word in ['versión', 'version']):
+                            logger.info(f"✅ Partial match for version: '{field_name}' = '{field_value}'")
+                            core_fields[english_field] = self.process_field_value(field_value, english_field)
+                            break
+        
+        logger.info(f"✅ Extracted core fields: {core_fields}")
+        
+        # Validation: Check if we have minimum viable data
+        has_policy = core_fields.get('policy_number') and str(core_fields['policy_number']).strip()
+        has_type = core_fields.get('endorsement_type') and str(core_fields['endorsement_type']).strip()
+        
+        logger.info(f"📋 Validation - Has policy: {has_policy}, Has type: {has_type}")
         
         return core_fields
     
-    def organize_fields_by_groups(self, fields: Dict[str, Any]) -> Dict[str, Dict]:
-        """Organize fields by UI groups for better display"""
-        groups = {}
-        ui_groups = self.config.get("ui_groups", {})
+    def process_field_value(self, field_value: Any, field_type: str) -> Any:
+        """Process field value based on its type"""
+        if not field_value or str(field_value).strip() in ['', 'nan', 'None', 'null']:
+            return None
         
-        for field_name, field_value in fields.items():
-            field_def = self.get_field_definition(field_name)
-            group_name = field_def.get("group", "other")
-            
-            if group_name not in groups:
-                group_info = ui_groups.get(group_name, {
-                    "label": group_name.title(),
-                    "icon": "fas fa-list",
-                    "order": 999
-                })
-                groups[group_name] = {
-                    "info": group_info,
-                    "fields": {}
-                }
-            
-            groups[group_name]["fields"][field_name] = {
-                "value": field_value,
-                "definition": field_def
-            }
-        
-        # Sort groups by order
-        return dict(sorted(groups.items(), key=lambda x: x[1]["info"].get("order", 999)))
-    
-    def detect_excel_structure(self, df: pd.DataFrame) -> str:
-        """Enhanced Excel structure detection"""
-        if len(df.columns) < 2:
-            return "unknown"
-        
-        # Get Excel processing config
-        excel_config = self.config.get("excel_processing", {})
-        field_indicators = excel_config.get("field_indicators", ["campo", "field", "parameter"])
-        
-        # Check first few rows for field indicators
-        first_col = df.iloc[:, 0].astype(str).str.lower()
-        second_col = df.iloc[:, 1].astype(str).str.lower()
-        
-        # Look for field indicators
-        has_field_indicators = any(
-            any(indicator in val for indicator in field_indicators)
-            for val in first_col.head(10) if val and val != 'nan'
-        )
-        
-        # Check if second column has field-like names
-        field_names = ['numero', 'tipo', 'version', 'poliza', 'endoso', 'ramo', 'elegibilidad']
-        has_field_names = any(
-            any(name in val for name in field_names)
-            for val in second_col.head(20) if val and val != 'nan'
-        )
-        
-        if has_field_indicators or has_field_names:
-            logger.info(" Detected field/value table structure")
-            return "field_value_table"
+        if field_type == 'policy_number':
+            # Enhanced policy number extraction
+            try:
+                cleaned_value = str(field_value).strip()
+                # Try to extract numbers from the string
+                numbers = re.findall(r'\d+', cleaned_value)
+                if numbers:
+                    return numbers[0]  # Return first number found
+                else:
+                    return cleaned_value  # Return as-is if no numbers found
+            except:
+                return str(field_value).strip()
         else:
-            logger.info(" Detected record-based structure")
-            return "record_based"
+            return str(field_value).strip()
+    
+    def process_campo_combinations_structure(self, df: pd.DataFrame, structure_info: Dict) -> List[Dict]:
+        """Enhanced Campo/Combinations processing with detailed logging"""
+        logger.info("🚀 Processing Campo/Combinations structure...")
+        endorsements = []
+        
+        try:
+            campo_col = structure_info['campo_column']
+            combination_columns = structure_info['combination_columns']
+            
+            logger.info(f"📋 Processing setup:")
+            logger.info(f"   Campo column: {campo_col}")
+            logger.info(f"   Combination columns: {combination_columns}")
+            
+            # Get field names from Campo column (skip empty rows)
+            campo_series = df.iloc[:, campo_col]
+            field_names = []
+            field_row_mapping = {}
+            
+            for idx, field in enumerate(campo_series):
+                if pd.notna(field) and str(field).strip():
+                    clean_field = str(field).strip()
+                    field_names.append(clean_field)
+                    field_row_mapping[clean_field] = idx
+            
+            logger.info(f"📝 Found {len(field_names)} field names in Campo column")
+            logger.info(f"📝 Field names sample: {field_names[:10]}")
+            
+            # Process each combination column
+            for col_idx, combination_col in enumerate(combination_columns):
+                combination_number = col_idx + 1
+                combination_data = {}
+                
+                logger.info(f"🔄 Processing combination {combination_number} (column index {combination_col})...")
+                
+                # Extract values for this combination
+                values_found = 0
+                for field_name in field_names:
+                    row_idx = field_row_mapping[field_name]
+                    
+                    try:
+                        if row_idx < len(df):
+                            field_value = df.iloc[row_idx, combination_col]
+                            
+                            if pd.notna(field_value) and str(field_value).strip() and str(field_value) != 'nan':
+                                clean_value = str(field_value).strip()
+                                combination_data[field_name] = clean_value
+                                values_found += 1
+                                logger.debug(f"   '{field_name}' = '{clean_value}'")
+                    except (IndexError, KeyError) as e:
+                        logger.debug(f"   Skipped '{field_name}': {e}")
+                        continue
+                
+                logger.info(f"📊 Combination {combination_number}: found {values_found} field values")
+                
+                # Create endorsement if we have sufficient data
+                if values_found >= 3:  # Minimum threshold
+                    # Extract core fields
+                    core_fields = self.extract_core_fields_from_combination(combination_data)
+                    
+                    # Check if we have minimum viable endorsement
+                    has_required_data = (
+                        core_fields.get('policy_number') or 
+                        core_fields.get('endorsement_type') or
+                        len(combination_data) >= 5
+                    )
+                    
+                    if has_required_data:
+                        endorsement = {
+                            'combination_number': combination_number,
+                            'core_fields': core_fields,
+                            'all_fields': combination_data,
+                            'spanish_fields': combination_data,
+                            'field_count': len(combination_data),
+                            'extraction_method': 'campo_combinations',
+                            'combination_id': f"combo_{combination_number}",
+                            'debug_info': {
+                                'values_found': values_found,
+                                'column_index': combination_col
+                            }
+                        }
+                        
+                        endorsements.append(endorsement)
+                        logger.info(f"✅ Created endorsement for combination {combination_number}")
+                        logger.info(f"   Core fields: {core_fields}")
+                    else:
+                        logger.warning(f"⚠️ Combination {combination_number} lacks required data")
+                        logger.warning(f"   Core fields: {core_fields}")
+                else:
+                    logger.warning(f"⚠️ Combination {combination_number} has insufficient data ({values_found} values)")
+        
+        except Exception as e:
+            logger.error(f"❌ Error processing campo combinations: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        logger.info(f"✅ Campo processing complete: {len(endorsements)} endorsements created")
+        return endorsements
+    
+    def process_record_based_table(self, df: pd.DataFrame, sheet_name: str) -> List[Dict]:
+        """Fallback record-based processing"""
+        logger.info(f"📊 Processing record-based table for sheet: {sheet_name}")
+        endorsements = []
+        
+        try:
+            for idx, row in df.iterrows():
+                row_data = {}
+                for col, value in row.items():
+                    if pd.notna(value) and str(value).strip() and str(value) != 'nan':
+                        row_data[str(col).strip()] = str(value).strip()
+                
+                if len(row_data) >= 3:  # Minimum data threshold
+                    core_fields = self.extract_core_fields_from_combination(row_data)
+                    
+                    if core_fields.get('policy_number') or core_fields.get('endorsement_type'):
+                        endorsement = {
+                            'combination_number': 1,
+                            'core_fields': core_fields,
+                            'all_fields': row_data,
+                            'spanish_fields': row_data,
+                            'field_count': len(row_data),
+                            'extraction_method': 'record_based',
+                            'source_row': idx,
+                            'combination_id': f"row_{idx}"
+                        }
+                        endorsements.append(endorsement)
+                        logger.info(f"✅ Created endorsement from row {idx}")
+        
+        except Exception as e:
+            logger.error(f"❌ Error processing record-based table: {e}")
+        
+        logger.info(f"✅ Record-based processing complete: {len(endorsements)} endorsements")
+        return endorsements
     
     def process_excel_file(self, file_path: str) -> Dict[str, Any]:
-        """Enhanced Excel processing with config-driven extraction"""
+        """Main Excel processing method with comprehensive debugging"""
+        logger.info(f"📊 Starting Excel file processing: {file_path}")
+        
         try:
-            logger.info(f"Processing Excel file: {file_path}")
-            
             # Read Excel file
-            excel_data = pd.read_excel(file_path, sheet_name=None)
+            excel_data = pd.read_excel(file_path, sheet_name=None, header=None)
+            logger.info(f"📋 Successfully read Excel file with {len(excel_data)} sheets")
             
             result = {
                 'file_type': 'excel',
@@ -241,139 +409,59 @@ class FileProcessor:
                 'metadata': {
                     'total_sheets': len(excel_data),
                     'processed_at': datetime.now().isoformat(),
-                    'config_used': Path(self.config_path).exists()
+                    'processing_method': 'enhanced_debug',
+                    'file_path': file_path
                 }
             }
             
             for sheet_name, df in excel_data.items():
-                logger.info(f"Processing sheet: {sheet_name}")
+                logger.info(f"\n📋 Processing sheet: '{sheet_name}'")
+                logger.info(f"   Original shape: {df.shape}")
                 
-                # Clean the dataframe
-                df = df.dropna(how='all').fillna('')
+                # Clean the dataframe but preserve structure
+                df = df.dropna(how='all', axis=0)  # Remove completely empty rows
+                df = df.fillna('')  # Fill NaN with empty string
+                logger.info(f"   Shape after cleaning: {df.shape}")
                 
                 # Detect structure
-                structure_type = self.detect_excel_structure(df)
+                structure_info = self.detect_excel_structure(df)
                 
-                # Store sheet info
+                # Store sheet information
                 result['sheets'][sheet_name] = {
                     'columns': list(df.columns),
                     'row_count': len(df),
-                    'structure_type': structure_type
+                    'column_count': len(df.columns),
+                    'structure_info': structure_info
                 }
                 
-                # Extract endorsements based on structure
-                if structure_type == "field_value_table":
-                    endorsements = self.process_field_value_table(df, sheet_name)
+                # Extract endorsements based on detected structure
+                sheet_endorsements = []
+                if structure_info['type'] == 'campo_combinations':
+                    logger.info("📋 Using Campo/Combinations processing method")
+                    sheet_endorsements = self.process_campo_combinations_structure(df, structure_info)
                 else:
-                    endorsements = self.process_record_based_table(df, sheet_name)
+                    logger.info("📋 Using record-based processing method")
+                    sheet_endorsements = self.process_record_based_table(df, sheet_name)
                 
-                result['endorsements'].extend(endorsements)
+                result['endorsements'].extend(sheet_endorsements)
+                logger.info(f"📊 Sheet '{sheet_name}' produced {len(sheet_endorsements)} endorsements")
             
-            logger.info(f" Excel processing complete. Found {len(result['endorsements'])} endorsements")
+            logger.info(f"\n✅ Excel processing COMPLETE!")
+            logger.info(f"   Total endorsements created: {len(result['endorsements'])}")
+            logger.info(f"   Processing method: {result['metadata']['processing_method']}")
+            
             return result
             
         except Exception as e:
-            logger.error(f" Error processing Excel file: {e}")
+            logger.error(f"❌ CRITICAL ERROR processing Excel file: {e}")
+            import traceback
+            traceback.print_exc()
             raise Exception(f"Failed to process Excel file: {str(e)}")
     
-    def process_field_value_table(self, df: pd.DataFrame, sheet_name: str) -> List[Dict]:
-        """Enhanced field/value table processing"""
-        endorsements = []
-        
-        try:
-            # Get column indices based on config or defaults
-            excel_config = self.config.get("excel_processing", {})
-            
-            # Find field column (usually B = index 1)
-            field_col_index = 1 if len(df.columns) > 1 else 0
-            field_column = df.iloc[:, field_col_index]
-            
-            # Find value columns (usually D onwards = index 3+)
-            value_col_start = 3 if len(df.columns) > 3 else 2
-            value_columns = df.iloc[:, value_col_start:]
-            
-            logger.info(f"Processing {len(value_columns.columns)} value columns")
-            
-            # Process each value column as a separate endorsement
-            for col_idx, col_name in enumerate(value_columns.columns):
-                endorsement_data = {}
-                
-                # Extract field/value pairs
-                for row_idx, field_name in enumerate(field_column):
-                    if pd.isna(field_name) or not str(field_name).strip():
-                        continue
-                    
-                    field_name = str(field_name).strip()
-                    
-                    # Get corresponding value
-                    if row_idx < len(value_columns):
-                        field_value = value_columns.iloc[row_idx, col_idx]
-                        if not pd.isna(field_value) and str(field_value).strip():
-                            normalized_field = self.normalize_field_name(field_name)
-                            endorsement_data[normalized_field] = str(field_value).strip()
-                
-                if endorsement_data:
-                    # Extract core fields
-                    core_fields = self.extract_core_fields(endorsement_data)
-                    
-                    # Only create endorsement if we have at least one core field
-                    if any(core_fields.values()):
-                        endorsement = {
-                            'core_fields': core_fields,
-                            'all_fields': endorsement_data,
-                            'grouped_fields': self.organize_fields_by_groups(endorsement_data),
-                            'source_sheet': sheet_name,
-                            'source_column': str(col_name),
-                            'extraction_method': 'field_value_table',
-                            'field_count': len(endorsement_data)
-                        }
-                        endorsements.append(endorsement)
-                        logger.info(f"Created endorsement from column {col_name} with {len(endorsement_data)} fields")
-            
-        except Exception as e:
-            logger.error(f" Error processing field/value table: {e}")
-        
-        return endorsements
-    
-    def process_record_based_table(self, df: pd.DataFrame, sheet_name: str) -> List[Dict]:
-        """Enhanced record-based table processing"""
-        endorsements = []
-        
-        try:
-            for idx, row in df.iterrows():
-                # Convert row to dictionary, filtering out empty values
-                row_data = {}
-                for col, value in row.items():
-                    if not pd.isna(value) and str(value).strip():
-                        normalized_col = self.normalize_field_name(str(col))
-                        row_data[normalized_col] = str(value).strip()
-                
-                if row_data:
-                    # Extract core fields
-                    core_fields = self.extract_core_fields(row_data)
-                    
-                    # Only create endorsement if we have at least one core field
-                    if any(core_fields.values()):
-                        endorsement = {
-                            'core_fields': core_fields,
-                            'all_fields': row_data,
-                            'grouped_fields': self.organize_fields_by_groups(row_data),
-                            'source_sheet': sheet_name,
-                            'source_row': idx,
-                            'extraction_method': 'record_based',
-                            'field_count': len(row_data)
-                        }
-                        endorsements.append(endorsement)
-        
-        except Exception as e:
-            logger.error(f" Error processing record-based table: {e}")
-        
-        return endorsements
-    
     def process_json_file(self, file_path: str) -> Dict[str, Any]:
-        """Enhanced JSON processing (same as before but with config support)"""
+        """Process JSON file with combination support"""
         try:
-            logger.info(f" Processing JSON file: {file_path}")
+            logger.info(f"📄 Processing JSON file: {file_path}")
             
             with open(file_path, 'r', encoding='utf-8') as f:
                 json_data = json.load(f)
@@ -384,58 +472,60 @@ class FileProcessor:
                 'endorsements': [],
                 'metadata': {
                     'processed_at': datetime.now().isoformat(),
-                    'config_used': Path(self.config_path).exists()
+                    'processing_method': 'enhanced_json'
                 }
             }
             
             # Handle different JSON structures
-            if isinstance(json_data, list):
-                for i, item in enumerate(json_data):
-                    endorsement = self.process_json_item(item, i)
+            if isinstance(json_data, dict):
+                if 'combinations' in json_data:
+                    combinations = json_data['combinations']
+                    for idx, combo in enumerate(combinations):
+                        endorsement = self.process_json_combination(combo, idx + 1)
+                        if endorsement:
+                            result['endorsements'].append(endorsement)
+                else:
+                    endorsement = self.process_json_combination(json_data, 1)
                     if endorsement:
                         result['endorsements'].append(endorsement)
-            elif isinstance(json_data, dict):
-                endorsement = self.process_json_item(json_data, 0)
-                if endorsement:
-                    result['endorsements'].append(endorsement)
+            elif isinstance(json_data, list):
+                for idx, item in enumerate(json_data):
+                    endorsement = self.process_json_combination(item, idx + 1)
+                    if endorsement:
+                        result['endorsements'].append(endorsement)
             
-            logger.info(f" JSON processing complete. Found {len(result['endorsements'])} endorsements")
+            logger.info(f"✅ JSON processing complete. Found {len(result['endorsements'])} endorsements")
             return result
             
         except Exception as e:
-            logger.error(f" Error processing JSON file: {e}")
+            logger.error(f"❌ Error processing JSON file: {e}")
             raise Exception(f"Failed to process JSON file: {str(e)}")
     
-    def process_json_item(self, item: Any, index: int) -> Optional[Dict]:
-        """Process a single JSON item as an endorsement"""
-        if not isinstance(item, dict):
-            return None
-        
+    def process_json_combination(self, data: Dict, combination_number: int) -> Optional[Dict]:
+        """Process a single JSON combination"""
         try:
-            # Flatten nested dictionaries if needed
-            flattened_data = self.flatten_dict(item)
+            if not isinstance(data, dict):
+                return None
             
-            # Normalize field names
-            normalized_data = {}
-            for key, value in flattened_data.items():
-                normalized_key = self.normalize_field_name(key)
-                normalized_data[normalized_key] = str(value) if value is not None else ""
+            # Flatten nested dictionaries if needed
+            flattened_data = self.flatten_dict(data) if any(isinstance(v, dict) for v in data.values()) else data
             
             # Extract core fields
-            core_fields = self.extract_core_fields(normalized_data)
+            core_fields = self.extract_core_fields_from_combination(flattened_data)
             
-            if any(core_fields.values()):
+            if core_fields.get('policy_number') or core_fields.get('endorsement_type'):
                 return {
+                    'combination_number': combination_number,
                     'core_fields': core_fields,
-                    'all_fields': normalized_data,
-                    'grouped_fields': self.organize_fields_by_groups(normalized_data),
-                    'source_index': index,
-                    'extraction_method': 'json_direct',
-                    'field_count': len(normalized_data)
+                    'all_fields': flattened_data,
+                    'spanish_fields': flattened_data,
+                    'field_count': len(flattened_data),
+                    'extraction_method': 'json_combination',
+                    'combination_id': f"json_combo_{combination_number}"
                 }
         
         except Exception as e:
-            logger.error(f"❌ Error processing JSON item: {e}")
+            logger.error(f"❌ Error processing JSON combination: {e}")
         
         return None
     
@@ -458,6 +548,7 @@ class FileProcessor:
     
     def process_file(self, file_path: str, original_filename: str) -> Dict[str, Any]:
         """Main method to process any supported file type"""
+        logger.info(f"🚀 Starting file processing: {original_filename}")
         file_extension = Path(original_filename).suffix.lower()
         
         if file_extension in ['.xlsx', '.xls']:
@@ -466,57 +557,24 @@ class FileProcessor:
             return self.process_json_file(file_path)
         else:
             raise Exception(f"Unsupported file type: {file_extension}")
-    
-    def get_field_schema(self) -> Dict[str, Any]:
-        """Get the complete field schema for frontend"""
-        return {
-            'core_fields': self.config.get('core_fields', {}),
-            'dynamic_field_types': self.config.get('dynamic_field_types', {}),
-            'ui_groups': self.config.get('ui_groups', {}),
-            'validation_rules': self.config.get('validation_rules', {}),
-            'ui_settings': self.config.get('ui_settings', {})
-        }
-    
-    def cleanup_old_files(self, days_old: int = 30):
-        """Clean up old uploaded files"""
-        try:
-            from datetime import datetime, timedelta
-            cutoff_date = datetime.now() - timedelta(days=days_old)
-            
-            for file_path in self.upload_dir.glob("*"):
-                if file_path.is_file():
-                    file_modified = datetime.fromtimestamp(file_path.stat().st_mtime)
-                    if file_modified < cutoff_date:
-                        file_path.unlink()
-                        logger.info(f"🗑 Cleaned up old file: {file_path}")
-        
-        except Exception as e:
-            logger.error(f" Error during cleanup: {e}")
 
-# Create global instance (backward compatible)
+
+# Create global instance
 file_processor = FileProcessor()
 
-# Example usage and testing
 if __name__ == "__main__":
-    print(" Testing Enhanced File Processor...")
+    print("🚀 Testing Enhanced File Processor with Complete Multi-Combination Support...")
+    print("✨ Enhanced file processor with comprehensive debugging ready!")
     
-    # Test configuration loading
-    print(f" Config loaded: {file_processor.config_path}")
-    print(f" Enhanced mode: {Path(file_processor.config_path).exists()}")
-    
-    # Test field mapping
-    test_fields = {
-        "Número de póliza": "1618805",
-        "Tipo de endoso": "Maternidad",
-        "Versión del endoso": "904",
-        "Ramo": "Salud",
-        "Elegibilidad": "SELF, PARTNER, CHILD"
-    }
-    
-    print(" Testing field extraction...")
-    core_fields = file_processor.extract_core_fields(test_fields)
-    grouped_fields = file_processor.organize_fields_by_groups(test_fields)
-    
-    print(f"Core fields: {core_fields}")
-    print(f" Grouped fields: {list(grouped_fields.keys())}")
-    print(" Enhanced file processor ready!")
+    # Test with a sample file if provided
+    import sys
+    if len(sys.argv) > 1:
+        test_file = sys.argv[1]
+        try:
+            result = file_processor.process_file(test_file, test_file)
+            print(f"\n📊 Test Results:")
+            print(f"   File type: {result['file_type']}")
+            print(f"   Endorsements created: {len(result['endorsements'])}")
+            print(f"   Processing method: {result['metadata']['processing_method']}")
+        except Exception as e:
+            print(f"❌ Test failed: {e}")
