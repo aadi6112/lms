@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy Management System</title>
+    
+    <!-- Modern Fonts (Apple-like) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Apple-inspired Color Palette */
+            --primary-blue: #007AFF;
+            --primary-blue-hover: #0056CC;
+            --background-primary: #FFFFFF;
+            --background-secondary: #F5F5F7;
+            --background-tertiary: #F0F0F0;
+            --text-primary: #1D1D1F;
+            --text-secondary: #6E6E73;
+            --text-tertiary: #86868B;
+            --border-color: #E5E5E7;
+            --border-hover: #D1D1D6;
+            --success-green: #28CD41;
+            --warning-orange: #FF9500;
+            --error-red: #FF3B30;
+            --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-heavy: 0 8px 24px rgba(0, 0, 0, 0.15);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Login Page Styles */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--background-secondary) 0%, #E8E8EA 100%);
+        }
+
+        .login-card {
+            background: var(--background-primary);
+            padding: 48px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-heavy);
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--border-color);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            background: var(--background-primary);
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-blue-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--background-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        /* Main App Layout */
+        .app-container {
+            display: none; /* Hidden until login */
+            min-height: 100vh;
+        }
+
+        .app-header {
+            background: var(--background-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-light);
+        }
+
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-logo i {
+            font-size: 24px;
+            color: var(--primary-blue);
+        }
+
+        .app-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .app-nav {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        /* Dashboard Content */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .dashboard-header {
+            margin-bottom: 32px;
+        }
+
+        .dashboard-title {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .dashboard-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        /* Controls Section */
+        .controls-section {
+            background: var(--background-primary);
+            padding: 24px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 200px 200px 200px auto;
+            gap: 16px;
+            align-items: end;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            background: var(--background-primary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            background: var(--background-primary);
+            cursor: pointer;
+        }
+
+        .upload-btn {
+            padding: 12px 20px;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        /* Endorsements List */
+        .endorsements-section {
+            background: var(--background-primary);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .endorsements-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .endorsements-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .endorsements-count {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .endorsements-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .endorsement-item {
+            display: grid;
+            grid-template-columns: 1fr 150px 100px 120px 80px;
+            gap: 16px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            align-items: center;
+        }
+
+        .endorsement-item:hover {
+            background: var(--background-secondary);
+        }
+
+        .endorsement-item:last-child {
+            border-bottom: none;
+        }
+
+        .endorsement-main {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .endorsement-policy {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .endorsement-type {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .endorsement-meta {
+            color: var(--text-tertiary);
+            font-size: 12px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            gap: 4px;
+        }
+
+        .status-approved {
+            background: rgba(40, 205, 65, 0.1);
+            color: var(--success-green);
+        }
+
+        .status-rejected {
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--error-red);
+        }
+
+        .status-review {
+            background: rgba(255, 149, 0, 0.1);
+            color: var(--warning-orange);
+        }
+
+        /* Loading and Empty States */
+        .loading-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 64px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 64px 24px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--text-tertiary);
+        }
+
+        /* Error Messages */
+        .error-message {
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--error-red);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        /* Success Messages */
+        .success-message {
+            background: rgba(40, 205, 65, 0.1);
+            color: var(--success-green);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(40, 205, 65, 0.2);
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .endorsement-item {
+                grid-template-columns: 1fr auto;
+                gap: 12px;
+            }
+
+            .endorsement-details {
+                display: none;
+            }
+
+            .dashboard-container {
+                padding: 16px;
+            }
+
+            .login-card {
+                padding: 32px 24px;
+                margin: 16px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Custom Scrollbar */
+        .endorsements-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .endorsements-list::-webkit-scrollbar-track {
+            background: var(--background-secondary);
+        }
+
+        .endorsements-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .endorsements-list::-webkit-scrollbar-thumb:hover {
+            background: var(--border-hover);
+        }
+
+        /* Hide file input */
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card fade-in">
+            <div class="login-header">
+                <h1 class="login-title">Policy Management</h1>
+                <p class="login-subtitle">Sign in to access your dashboard</p>
+            </div>
+            
+            <div id="loginError" class="error-message"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" id="username" name="username" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+            </form>
+            
+            <div style="margin-top: 24px; text-align: center; color: var(--text-tertiary); font-size: 12px;">
+                Default: admin / admin123
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="appContainer" class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="app-logo">
+                <i class="fas fa-shield-alt"></i>
+                <span class="app-title">Policy Management</span>
+            </div>
+            
+            <nav class="app-nav">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="currentUserName">Admin User</span>
+                </div>
+                <button id="logoutBtn" class="btn btn-secondary logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </nav>
+        </header>
+
+        <!-- Dashboard -->
+        <main class="dashboard-container">
+            <div class="dashboard-header">
+                <h1 class="dashboard-title">Endorsement Dashboard</h1>
+                <p class="dashboard-subtitle">Manage and review policy endorsements</p>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="controls-section">
+                <div class="controls-grid">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search by policy number or endorsement type...">
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Status</label>
+                        <select id="statusFilter" class="select-input">
+                            <option value="">All Status</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="In Review">In Review</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Type</label>
+                        <select id="typeFilter" class="select-input">
+                            <option value="">All Types</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Sort By</label>
+                        <select id="sortBy" class="select-input">
+                            <option value="created_at">Date Created</option>
+                            <option value="policy_number">Policy Number</option>
+                            <option value="endorsement_type">Type</option>
+                            <option value="status">Status</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">&nbsp;</label>
+                        <button id="uploadBtn" class="btn btn-primary upload-btn">
+                            <i class="fas fa-upload"></i>
+                            Upload File
+                        </button>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.json">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div id="successMessage" class="success-message"></div>
+            <div id="errorMessage" class="error-message"></div>
+
+            <!-- Endorsements List -->
+            <div class="endorsements-section">
+                <div class="endorsements-header">
+                    <h2 class="endorsements-title">Endorsements</h2>
+                    <span id="endorsementsCount" class="endorsements-count">0 items</span>
+                </div>
+                
+                <div class="endorsements-list" id="endorsementsList">
+                    <!-- Loading State -->
+                    <div id="loadingState" class="loading-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span style="margin-left: 12px;">Loading endorsements...</span>
+                    </div>
+                    
+                    <!-- Empty State -->
+                    <div id="emptyState" class="empty-state" style="display: none;">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>No endorsements found</h3>
+                        <p>Upload your first endorsement file to get started</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Application State
+        let currentUser = null;
+        let endorsements = [];
+        let allEndorsementTypes = [];
+
+        // DOM Elements
+        const loginScreen = document.getElementById('loginScreen');
+        const appContainer = document.getElementById('appContainer');
+        const loginForm = document.getElementById('loginForm');
+        const loginError = document.getElementById('loginError');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const currentUserName = document.getElementById('currentUserName');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const typeFilter = document.getElementById('typeFilter');
+        const sortBy = document.getElementById('sortBy');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const endorsementsList = document.getElementById('endorsementsList');
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const endorsementsCount = document.getElementById('endorsementsCount');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // API Functions
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Request failed');
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        // Authentication
+        async function login(username, password) {
+            const result = await apiCall('/api/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+
+            if (result.success) {
+                // Set session cookie
+                document.cookie = `session_token=${result.session_token}; path=/; max-age=86400`;
+                currentUser = result.user;
+                showApp();
+            } else {
+                throw new Error(result.message);
+            }
+        }
+
+        async function logout() {
+            try {
+                await apiCall('/api/auth/logout', { method: 'POST' });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            
+            // Clear session
+            document.cookie = 'session_token=; path=/; max-age=0';
+            currentUser = null;
+            showLogin();
+        }
+
+        // UI Functions
+        function showLogin() {
+            loginScreen.style.display = 'flex';
+            appContainer.style.display = 'none';
+        }
+
+        function showApp() {
+            loginScreen.style.display = 'none';
+            appContainer.style.display = 'block';
+            currentUserName.textContent = currentUser?.full_name || currentUser?.username || 'User';
+            initDashboard();
+        }
+
+        function showMessage(message, isError = false) {
+            const messageEl = isError ? errorMessage : successMessage;
+            const otherEl = isError ? successMessage : errorMessage;
+            
+            otherEl.style.display = 'none';
+            messageEl.textContent = message;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // Data Functions
+        async function loadEndorsements() {
+            try {
+                loadingState.style.display = 'flex';
+                emptyState.style.display = 'none';
+
+                const params = new URLSearchParams({
+                    status: statusFilter.value,
+                    endorsement_type: typeFilter.value,
+                    search_term: searchInput.value,
+                    sort_by: sortBy.value,
+                    sort_order: 'DESC',
+                    limit: '100'
+                });
+
+                const result = await apiCall(`/api/endorsements?${params}`);
+                endorsements = result.data || [];
+                
+                renderEndorsements();
+                updateCount();
+            } catch (error) {
+                showMessage('Failed to load endorsements: ' + error.message, true);
+                endorsements = [];
+                renderEndorsements();
+            } finally {
+                loadingState.style.display = 'none';
+            }
+        }
+
+        async function loadEndorsementTypes() {
+            try {
+                const result = await apiCall('/api/search/endorsement-types');
+                allEndorsementTypes = result.data || [];
+                populateTypeFilter();
+            } catch (error) {
+                console.error('Failed to load endorsement types:', error);
+            }
+        }
+
+        function populateTypeFilter() {
+            typeFilter.innerHTML = '<option value="">All Types</option>';
+            allEndorsementTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeFilter.appendChild(option);
+            });
+        }
+
+        function renderEndorsements() {
+            if (endorsements.length === 0) {
+                endorsementsList.innerHTML = '';
+                emptyState.style.display = 'flex';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            
+            const html = endorsements.map(endorsement => `
+                <div class="endorsement-item" onclick="viewEndorsement(${endorsement.id})">
+                    <div class="endorsement-main">
+                        <div class="endorsement-policy">#${endorsement.policy_number || 'N/A'}</div>
+                        <div class="endorsement-type">${endorsement.endorsement_type || 'Unknown Type'}</div>
+                        <div class="endorsement-meta">Version: ${endorsement.endorsement_version || 'N/A'} • ${formatDate(endorsement.created_at)}</div>
+                    </div>
+                    <div>${endorsement.concepto_id || 'N/A'}</div>
+                    <div>${endorsement.endorsement_validity || 'N/A'}</div>
+                    <div>${formatDate(endorsement.updated_at)}</div>
+                    <div>
+                        <span class="status-badge status-${getStatusClass(endorsement.status)}">
+                            <i class="fas ${getStatusIcon(endorsement.status)}"></i>
+                            ${endorsement.status}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+
+            endorsementsList.innerHTML = html;
+        }
+
+        function updateCount() {
+            endorsementsCount.textContent = `${endorsements.length} items`;
+        }
+
+        function getStatusClass(status) {
+            switch(status?.toLowerCase()) {
+                case 'approved': return 'approved';
+                case 'rejected': return 'rejected';
+                default: return 'review';
+            }
+        }
+
+        function getStatusIcon(status) {
+            switch(status?.toLowerCase()) {
+                case 'approved': return 'fa-check-circle';
+                case 'rejected': return 'fa-times-circle';
+                default: return 'fa-clock';
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        // File Upload
+        async function uploadFile(file) {
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/files/upload', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Upload failed');
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message);
+                    loadEndorsements();
+                    loadEndorsementTypes();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                showMessage('Upload failed: ' + error.message, true);
+            }
+        }
+
+        // View Endorsement (placeholder for next step)
+        function viewEndorsement(id) {
+            showMessage(`View endorsement ${id} - Detail view coming in next step!`);
+        }
+
+        // Initialize Dashboard
+        async function initDashboard() {
+            await Promise.all([
+                loadEndorsements(),
+                loadEndorsementTypes()
+            ]);
+        }
+
+        // Event Listeners
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                loginError.style.display = 'none';
+                await login(username, password);
+            } catch (error) {
+                loginError.textContent = error.message;
+                loginError.style.display = 'block';
+            }
+        });
+
+        logoutBtn.addEventListener('click', logout);
+
+        // Filter and search event listeners
+        searchInput.addEventListener('input', debounce(loadEndorsements, 300));
+        statusFilter.addEventListener('change', loadEndorsements);
+        typeFilter.addEventListener('change', loadEndorsements);
+        sortBy.addEventListener('change', loadEndorsements);
+
+        // File upload
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                uploadFile(file);
+                fileInput.value = ''; // Reset input
+            }
+        });
+
+        // Utility function for debouncing
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const result = await apiCall('/api/auth/me');
+                if (result.success) {
+                    currentUser = result.user;
+                    showApp();
+                }
+            } catch (error) {
+                showLogin();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + K for quick search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInput.focus();
+            }
+            
+            // Escape to clear search
+            if (e.key === 'Escape' && searchInput === document.activeElement) {
+                searchInput.value = '';
+                loadEndorsements();
+            }
+        });
+    </script>
+</body>
+</html>
