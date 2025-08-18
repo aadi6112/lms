@@ -483,7 +483,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown"""
-    print("🛑 Policy Management System shutting down...")
+    print(" Policy Management System shutting down...")
     # Clean up sessions
     active_sessions.clear()
 
@@ -505,6 +505,64 @@ async def internal_error_handler(request: Request, exc):
         status_code=500,
         content={"success": False, "message": "Internal server error"}
     )
+# Add this to your existing main.py file, just before the "if __name__ == "__main__":" line
+
+# Field Schema Route (ADD THIS TO YOUR EXISTING main.py)
+@app.get("/api/schema/fields")
+async def get_field_schema(current_user: Dict = Depends(get_current_user)):
+    """Get the complete field schema for dynamic frontend rendering"""
+    try:
+        schema = file_processor.get_field_schema()
+        return {
+            "success": True,
+            "data": schema
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch field schema: {str(e)}"
+        )
+
+# Enhanced endorsement detail endpoint (REPLACE your existing get_endorsement endpoint)
+@app.get("/api/endorsements/{endorsement_id}")
+async def get_endorsement(
+    endorsement_id: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get specific endorsement by ID with enhanced field organization"""
+    try:
+        endorsement = endorsement_model.get_endorsement_by_id(endorsement_id)
+        
+        if not endorsement:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Endorsement not found"
+            )
+        
+        # If the endorsement doesn't have grouped fields, organize them now
+        if 'grouped_fields' not in endorsement.get('json_data', {}):
+            # Re-organize fields using current config
+            all_fields = endorsement.get('json_data', {})
+            grouped_fields = file_processor.organize_fields_by_groups(all_fields)
+            
+            # Add grouped fields to the response
+            endorsement['grouped_fields'] = grouped_fields
+        else:
+            # Use existing grouped fields
+            endorsement['grouped_fields'] = endorsement['json_data'].get('grouped_fields', {})
+        
+        return {
+            "success": True,
+            "data": endorsement
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch endorsement: {str(e)}"
+        )
 
 if __name__ == "__main__":
     # Run the application
