@@ -1,0 +1,199 @@
+{
+  "field_mappings": {
+    "spanish_to_english": {
+      "número de póliza": "policy_number",
+      "numero de poliza": "policy_number",
+      "policy_number": "policy_number",
+      "poliza": "policy_number",
+      
+      "tipo de endoso": "endorsement_type",
+      "endorsement_type": "endorsement_type",
+      "endoso": "endorsement_type",
+      "nombre del endoso": "endorsement_type",
+      
+      "versión del endoso": "endorsement_version",
+      "version del endoso": "endorsement_version",
+      "endorsement_version": "endorsement_version",
+      "version": "endorsement_version",
+      
+      "concepto id": "concepto_id",
+      "concepto_id": "concepto_id",
+      "id": "concepto_id",
+      
+      "año de la primera emisión del endoso": "first_emission_year",
+      "año de primera emision": "first_emission_year",
+      "primera emisión": "first_emission_year",
+      
+      "ramo": "branch",
+      "rama": "branch",
+      "branch": "branch",
+      
+      "elegibilidad": "eligibility",
+      "eligibility": "eligibility",
+      
+      "subgrupo": "subgroup",
+      "sub-grupo": "subgroup",
+      "subgroup": "subgroup",
+      
+      "agrupación de la colectividad": "group_classification",
+      "agrupacion": "group_classification",
+      "grouping": "group_classification",
+      
+      "especificación de caso particular": "case_specification",
+      "especificacion": "case_specification",
+      "caso particular": "case_specification"
+    }
+  },
+  
+  "core_fields": {
+    "policy_number": {
+      "label": "Policy Number",
+      "type": "text",
+      "required": true,
+      "validation": "string",
+      "searchable": true,
+      "display_order": 1,
+      "group": "core"
+    },
+    "endorsement_type": {
+      "label": "Endorsement Type", 
+      "type": "text",
+      "required": true,
+      "validation": "string",
+      "searchable": true,
+      "display_order": 2,
+      "group": "core"
+    },
+    "endorsement_version": {
+      "label": "Version",
+      "type": "text",
+      "required": false,
+      "validation": "string",
+      "display_order": 3,
+      "group": "core"
+    },
+    "concepto_id": {
+      "label": "Concepto ID",
+      "type": "text", 
+      "required": false,
+      "validation": "string",
+      "display_order": 4,
+      "group": "core"
+    },
+    "status": {
+      "label": "Status",
+      "type": "select",
+      "required": true,
+      "options": ["In Review", "Approved", "Rejected"],
+      "default": "In Review",
+      "display_order": 5,
+      "group": "core"
+    }
+  },
+  
+  "dynamic_field_types": {
+    "first_emission_year": {
+      "label": "First Emission Year",
+      "type": "number",
+      "validation": "year",
+      "group": "dates"
+    },
+    "branch": {
+      "label": "Branch/Ramo", 
+      "type": "text",
+      "validation": "string",
+      "group": "classification"
+    },
+    "eligibility": {
+      "label": "Eligibility",
+      "type": "textarea",
+      "validation": "string",
+      "group": "conditions"
+    },
+    "subgroup": {
+      "label": "Subgroup",
+      "type": "text", 
+      "validation": "string",
+      "group": "classification"
+    },
+    "group_classification": {
+      "label": "Group Classification",
+      "type": "text",
+      "validation": "string", 
+      "group": "classification"
+    },
+    "case_specification": {
+      "label": "Case Specification",
+      "type": "textarea",
+      "validation": "string",
+      "group": "conditions"
+    }
+  },
+  
+  "ui_groups": {
+    "core": {
+      "label": "Core Information",
+      "icon": "fas fa-info-circle",
+      "order": 1,
+      "collapsible": false
+    },
+    "dates": {
+      "label": "Dates & Timing",
+      "icon": "fas fa-calendar-alt", 
+      "order": 2,
+      "collapsible": true
+    },
+    "classification": {
+      "label": "Classification",
+      "icon": "fas fa-tags",
+      "order": 3,
+      "collapsible": true  
+    },
+    "conditions": {
+      "label": "Conditions & Rules",
+      "icon": "fas fa-list-check",
+      "order": 4,
+      "collapsible": true
+    },
+    "other": {
+      "label": "Additional Fields", 
+      "icon": "fas fa-plus-circle",
+      "order": 5,
+      "collapsible": true
+    }
+  },
+  
+  "excel_processing": {
+    "field_column": "B",
+    "value_columns_start": "D", 
+    "description_column": "C",
+    "skip_empty_rows": true,
+    "auto_detect_structure": true,
+    "field_indicators": ["campo", "field", "parameter", "nombre"],
+    "value_indicators": ["value", "valor", "data", "dato"]
+  },
+  
+  "validation_rules": {
+    "year": {
+      "pattern": "^(19|20)\\d{2}$",
+      "message": "Must be a valid year (1900-2099)"
+    },
+    "string": {
+      "min_length": 1,
+      "max_length": 500,
+      "message": "Must be between 1-500 characters"
+    },
+    "policy_number": {
+      "pattern": "^[A-Z0-9-]+$", 
+      "message": "Only letters, numbers and hyphens allowed"
+    }
+  },
+  
+  "ui_settings": {
+    "fields_per_row": 2,
+    "show_field_descriptions": true,
+    "enable_field_reordering": true,
+    "show_validation_messages": true,
+    "auto_save_delay": 2000
+  }
+}
