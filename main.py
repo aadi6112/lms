@@ -295,31 +295,67 @@ async def get_endorsement(
             detail=f"Failed to fetch endorsement: {str(e)}"
         )
 
+# REPLACE the existing get_endorsement_combinations endpoint with this:
 @app.get("/api/endorsements/{policy_number}/{endorsement_type}/combinations")
 async def get_endorsement_combinations(
     policy_number: str,
     endorsement_type: str,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Get all combinations for a specific policy and endorsement type"""
+    """Get all combinations for a specific policy and endorsement type - FIXED VERSION"""
     try:
+        print(f"🔍 API: Getting combinations for Policy {policy_number}, Type {endorsement_type}")
+        
         combinations = endorsement_model.get_endorsement_combinations(policy_number, endorsement_type)
         
         if not combinations:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No combinations found for this endorsement"
+                detail=f"No combinations found for Policy {policy_number}, Type {endorsement_type}"
             )
+        
+        print(f"✅ API: Found {len(combinations)} combinations")
+        
+        # CRITICAL FIX: Ensure each combination has required fields for frontend
+        formatted_combinations = []
+        for combo in combinations:
+            formatted_combo = {
+                "id": combo.get("id"),
+                "policy_number": combo.get("policy_number"),
+                "endorsement_type": combo.get("endorsement_type"),
+                "endorsement_version": combo.get("endorsement_version"),
+                "endorsement_validity": combo.get("endorsement_validity"),
+                "concepto_id": combo.get("concepto_id"),
+                "combination_number": combo.get("combination_number", 1),
+                "combination_id": combo.get("combination_id", f"combo_{combo.get('id')}"),
+                "total_combinations": len(combinations),
+                "status": combo.get("status", "In Review"),
+                "spanish_fields": combo.get("spanish_fields", {}),
+                "json_data": combo.get("json_data", {}),
+                "original_filename": combo.get("original_filename"),
+                "created_at": combo.get("created_at"),
+                "updated_at": combo.get("updated_at"),
+                "uploaded_by": combo.get("uploaded_by")
+            }
+            formatted_combinations.append(formatted_combo)
+        
+        # Sort by combination_number for consistent display
+        formatted_combinations.sort(key=lambda x: x.get("combination_number", 0))
         
         return {
             "success": True,
-            "data": combinations,
-            "count": len(combinations)
+            "data": formatted_combinations,
+            "count": len(formatted_combinations),
+            "policy_number": policy_number,
+            "endorsement_type": endorsement_type
         }
         
     except HTTPException:
         raise
     except Exception as e:
+        print(f"❌ API Error getting combinations: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch endorsement combinations: {str(e)}"
