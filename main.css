@@ -1,0 +1,223 @@
+/* static/css/main.css - Minimal Clean Design System */
+
+/* Import minimal CSS modules */
+@import url('01-variables.css');
+@import url('02-components.css');
+@import url('03-layout.css');
+
+/* ========================================
+   MINIMAL GLOBAL STYLES
+   ======================================== */
+
+html {
+    font-size: 16px;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Minimal selection */
+::selection {
+    background: var(--black);
+    color: var(--white);
+}
+
+/* ========================================
+   MINIMAL UTILITIES
+   ======================================== */
+
+.w-full { width: 100%; }
+.text-center { text-align: center; }
+.hidden { display: none; }
+.flex { display: flex; }
+.grid { display: grid; }
+
+/* Minimal spacing */
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-6 { margin-bottom: var(--space-6); }
+
+.p-4 { padding: var(--space-4); }
+.p-6 { padding: var(--space-6); }
+
+/* Field Editor Styles - Phase 3 */
+.field-item {
+    background: var(--background-secondary);
+    padding: var(--space-4);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    position: relative;
+    transition: var(--transition-normal);
+}
+
+.field-item:hover {
+    border-color: var(--border-hover);
+}
+
+.field-item.editable {
+    background: var(--background-primary);
+}
+
+.field-name {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-2);
+}
+
+.field-value {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    word-break: break-word;
+    min-height: 20px;
+    line-height: 1.4;
+}
+
+.field-value.empty {
+    color: var(--text-tertiary);
+    font-style: italic;
+}
+
+.field-input {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    background: var(--background-primary);
+    color: var(--text-primary);
+    transition: var(--transition-normal);
+}
+
+.field-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+}
+
+.field-edit-icon {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: var(--transition-normal);
+    font-size: var(--font-size-xs);
+}
+
+.field-edit-icon:hover {
+    color: var(--text-primary);
+}
+
+/* Status Badge Variations - ADD TO END OF main.css */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    gap: var(--space-1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid;
+}
+
+.status-badge.status-approved,
+.status-approved {
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    border-color: var(--black);
+}
+
+.status-badge.status-rejected,
+.status-rejected {
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    border-color: var(--black);
+}
+
+.status-badge.status-review,
+.status-review {
+    background-color: var(--background-secondary);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+/* Field Editor Enhancements */
+.field-item {
+    background: var(--background-secondary);
+    padding: var(--space-4);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    position: relative;
+    transition: var(--transition-normal);
+}
+
+.field-item:hover {
+    border-color: var(--border-hover);
+}
+
+.field-item.editable {
+    background: var(--background-primary);
+    border-color: var(--black);
+}
+
+.field-name {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-2);
+}
+
+.field-value {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    word-break: break-word;
+    min-height: 20px;
+    line-height: 1.4;
+}
+
+.field-value.empty {
+    color: var(--text-tertiary);
+    font-style: italic;
+}
+
+.field-input {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    background: var(--background-primary);
+    color: var(--text-primary);
+    transition: var(--transition-normal);
+}
+
+.field-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+}
+
+.field-edit-icon {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: var(--transition-normal);
+    font-size: var(--font-size-xs);
+    padding: var(--space-1);
+    border-radius: var(--radius-sm);
+}
+
+.field-edit-icon:hover {
+    color: var(--text-primary);
+    background: var(--background-tertiary);
+}
+
